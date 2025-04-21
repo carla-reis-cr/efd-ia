@@ -416,6 +416,24 @@ def extract_registro_number(text_content):
                     registros.append(numbers[0])  # Armazena todos os números encontrados
     return registros  # Retorna todos os números de registro encontrados
 
+def clean_header(text):
+    """
+    Remove o cabeçalho do texto (versão e data de atualização)
+    """
+    # Padrões para encontrar e remover o cabeçalho
+    header_patterns = [
+        r'Guia\s+Prático\s+EFD-ICMS/IPI\s*[–-]\s*Versão\s+\d+\.\d+\.\d+',
+        r'Atualização:\s*\d{1,2}\s+de\s+[^\d]+\s+de\s+\d{4}'
+    ]
+    
+    cleaned_text = text
+    for pattern in header_patterns:
+        cleaned_text = re.sub(pattern, '', cleaned_text, flags=re.IGNORECASE)
+    
+    # Remove linhas vazias extras que podem ter sido criadas
+    cleaned_text = re.sub(r'\n\s*\n\s*\n', '\n\n', cleaned_text)
+    return cleaned_text.strip()
+
 def extract_registro_sections(text_content):
     """
     Extrai as seções de cada registro, começando com 'REGISTRO XXXX:' e 
@@ -426,6 +444,9 @@ def extract_registro_sections(text_content):
     
     # Juntar todo o texto em um único conteúdo
     full_text = '\n'.join(text_content)
+    
+    # Limpa o cabeçalho do texto
+    full_text = clean_header(full_text)
     
     # Padrões para identificar o início de um registro
     registro_patterns = [
@@ -512,6 +533,37 @@ def clean_json_string(obj):
         return obj.replace('\\"', '"')
     return obj
 
+def extract_header_info(text_content):
+    """
+    Extrai informações do cabeçalho do documento (versão e data de atualização)
+    
+    Args:
+        text_content (str): Texto do documento
+        
+    Returns:
+        dict: Dicionário com versão e data de atualização
+    """
+    info = {
+        "versao": None,
+        "data_atualizacao": None
+    }
+    
+    # Padrões para encontrar versão e data
+    versao_pattern = r'Guia\s+Prático\s+EFD-ICMS/IPI\s*[–-]\s*Versão\s+(\d+\.\d+\.\d+)'
+    data_pattern = r'Atualização:\s*(\d{1,2}\s+de\s+[^\d]+\s+de\s+\d{4})'
+    
+    # Procura pela versão
+    versao_match = re.search(versao_pattern, text_content, re.IGNORECASE)
+    if versao_match:
+        info["versao"] = versao_match.group(1)
+    
+    # Procura pela data de atualização
+    data_match = re.search(data_pattern, text_content, re.IGNORECASE)
+    if data_match:
+        info["data_atualizacao"] = data_match.group(1)
+    
+    return info
+
 def main():
     print("Iniciando o script...")
     # Lista todos os PDFs na pasta
@@ -524,7 +576,7 @@ def main():
     
     # Dicionário para armazenar todos os registros
     all_registros = {
-        "registros": []
+        "registros": [],
     }
     
     # Set para controlar registros já processados
@@ -540,8 +592,18 @@ def main():
             print(f"Total de tabelas encontradas: {len(tables)}")
             print(f"Total de páginas processadas: {len(text_content)}")
             
+            # Extrai informações do cabeçalho
+            header_info = extract_header_info('\n'.join(text_content))
+            print("\nInformações do documento:")
+            print(f"Versão: {header_info['versao']}")
+            print(f"Data de Atualização: {header_info['data_atualizacao']}")
+            
+            # Adiciona as informações do cabeçalho ao JSON
+            all_registros["versao_documento"] = header_info["versao"]
+            all_registros["data_atualizacao"] = header_info["data_atualizacao"]
+            
             # Extrai as seções dos registros
-            print("Extraindo seções dos registros...")
+            print("\nExtraindo seções dos registros...")
             registros = extract_registro_sections(text_content)
             print(f"Total de registros encontrados: {len(registros)}")
             
@@ -593,8 +655,8 @@ def main():
             print(f"Erro ao processar o arquivo {pdf_file}: {str(e)}")
             continue
     
-    # Gera timestamp para nome do arquivo
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    # Gera nome do arquivo com a data do dia
+    data_atual = datetime.now().strftime("%Y%m%d")
     
     # Limpa as strings antes de salvar
     print("Limpando strings antes de salvar...")
@@ -603,7 +665,7 @@ def main():
     # Obtém o diretório de saída da variável de ambiente ou usa um valor padrão
     output_dir = os.getenv('OUTPUT_DIR_STRUCTURED', 'documents/structured')
     os.makedirs(output_dir, exist_ok=True)
-    output_file = os.path.join(output_dir, f"registros_combinados_{timestamp}.json")
+    output_file = os.path.join(output_dir, f"registros_{data_atual}.json")
     
     print(f"Salvando resultados em {output_file}...")
     with open(output_file, 'w', encoding='utf-8') as f:
