@@ -1,9 +1,39 @@
-efd_utils/__pycache__
-efd_eval/__pycache__
-efd_rules/__pycache__
-efd_ia/__pycache__
-efd_struct/__pycache__
-efd_db/__pycache__
-config/__pycache__
-documents/pdfs/tests
-documents/structured
+# Arquivos de ambiente
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Diretórios de dados
+documents/pdfs/**
+documents/structured/**
+output/**
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Sistema
+.DS_Store
+Thumbs.db
