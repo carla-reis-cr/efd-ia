@@ -15,9 +15,8 @@ def init_env():
 
     # Você pode adicionar validações de variáveis obrigatórias aqui
     required_vars = [
-        # Liste aqui as variáveis de ambiente obrigatórias
-        # 'API_KEY',
-        # 'DATABASE_URL',
+       'DIRECTORY_PDFS',
+       'OUTPUT_DIR_STRUCTURED'
     ]
 
     missing_vars = [var for var in required_vars if not os.getenv(var)]
