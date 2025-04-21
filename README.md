@@ -20,22 +20,39 @@ projeto_efd_ia/ ├── main.py
 
 projeto_efd_ia/
 ├── main.py # Executa a pipeline completa
+
 ├── requirements.txt # Dependências do projeto
+
 ├── README.md # Documentação do projeto
+
 │
+
 ├── notebooks/ # Análises e experimentos com Jupyter
+
 │ ├── 01_texto_bruto.ipynb # Extração e exploração inicial
+
 │ ├── 02_texto_estruturado.ipynb # Validação e estruturação
+
 │ └── 03_teste_com_ia.ipynb # Avaliações com modelos IA
+
 │
+
 ├── efd_rules/ # Módulo de extração de regras
+
 ├── efd_struct/ # Módulo de estruturação de dados
+
 ├── efd_db/ # Integração com banco de dados
+
 ├── efd_ai/ # Avaliação e automação com IA
+
 ├── efd_eval/ # Métricas e geração de relatórios
+
 ├── efd_utils/ # Utilitários e funções auxiliares
+
 ├── data/ # Dados brutos, estruturados e relatórios
+
 ├── config/ # Arquivos de configuração
+
 └── tests/ # Testes automatizados
 
 ---
@@ -74,7 +91,6 @@ conda activate efd-ia
 
 # Instale as dependências
 pip install -r requirements.txt
-```
 ```
 
 ### Passos Explicados:
