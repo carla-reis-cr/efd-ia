@@ -1,9 +1,13 @@
 import os
+from config import env
 
-def list_pdf_files(directory="documents/pdfs"):
+
+def list_pdf_files(directory=None):
     """
     Lista todos os arquivos PDF em um diretório
     """
+    # Usa o diretório especificado ou o valor padrão da variável de ambiente
+    directory = directory or os.getenv('DIRECTORY_PDFS', 'documents/pdfs')
     pdf_files = []
     
     # Cria o diretório se não existir

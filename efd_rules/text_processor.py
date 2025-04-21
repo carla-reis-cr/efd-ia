@@ -4,7 +4,13 @@ import os
 import json
 from datetime import datetime
 import re
+import sys
+
+# Adiciona o diretório pai ao PYTHONPATH
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from efd_utils.document_reader import list_pdf_files  # Importa a função do novo arquivo
+from config import env
 
 def extract_pdf_content(pdf_path):
     """
@@ -594,8 +600,8 @@ def main():
     print("Limpando strings antes de salvar...")
     all_registros = clean_json_string(all_registros)
     
-    # Salva todos os registros em um único arquivo JSON
-    output_dir = "output"
+    # Obtém o diretório de saída da variável de ambiente ou usa um valor padrão
+    output_dir = os.getenv('OUTPUT_DIR_STRUCTURED', 'documents/structured')
     os.makedirs(output_dir, exist_ok=True)
     output_file = os.path.join(output_dir, f"registros_combinados_{timestamp}.json")
     
@@ -609,4 +615,4 @@ def main():
 if __name__ == "__main__":
     print("Script iniciado")
     main()
-    print("Script concluído") 
+    print("Script concluído")
