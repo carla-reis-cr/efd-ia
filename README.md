@@ -4,13 +4,58 @@ Este projeto visa criar uma bateria de testes para avaliar a aplicação de mode
 
 ---
 
-## 📌 Funcionalidades Principais
+## 📌 Objetivos
 
-**📄 Extração Automática de Regras** de manuais técnicos da Receita Federal (SPED)
+- Extrair regras e padrões de documentos fiscais brutos.
+- Estruturar os dados em formatos padronizados (JSON, CSV).
+- Avaliar a consistência das informações com modelos de IA.
+- Automatizar o processo e integrar com sistemas ERP e banco de dados.
 
-**🔎 Validação Inteligente** de registros fiscais com regex e lógica condicional
+---
 
-**🤖 Explicações Contextuais** usando RAG (Retrieval-Augmented Generation)
+## 🚀 Como Começar
+
+### Configuração do Ambiente
+
+1. Clone o repositório:
+```bash
+git clone https://github.com/seu-usuario/projeto_efd_ia.git
+cd projeto_efd_ia
+```
+
+2. Crie um ambiente virtual e ative:
+```bash
+conda create --name efd-ia python=3.10
+conda activate efd-ia
+```
+
+3. Instale as dependências:
+```bash
+pip install -r requirements.txt
+```
+
+### Configuração das Variáveis de Ambiente
+
+1. Copie o arquivo de exemplo `.env.example` para criar seu próprio arquivo `.env`:
+```bash
+cp .env.example .env
+```
+
+2. Edite o arquivo `.env` com suas configurações:
+```ini
+# Diretórios do projeto
+DIRECTORY_PDFS=documents/pdfs/tests        # Diretório onde estão os PDFs
+OUTPUT_DIR_STRUCTURED=documents/structured  # Diretório para saída dos dados estruturados
+
+# Adicione outras variáveis conforme necessário
+```
+
+3. Certifique-se de que os diretórios especificados existam:
+```bash
+mkdir -p documents/pdfs/tests documents/structured
+```
+
+> **Nota**: O arquivo `.env` não é versionado no Git por conter informações sensíveis. Sempre mantenha suas credenciais e configurações locais neste arquivo.
 
 ---
 
@@ -75,30 +120,6 @@ projeto_efd_ia/
    - Integração com sistemas externos (ERP, banco de dados)
 
 ---
-
-## 🚀 Como Começar
-
-```bash
-# Clone o repositório
-git clone https://github.com/carla-reis-cr/efd-ia.git
-cd efd_ia
-
-# Crie um ambiente Conda chamado efd-ia
-conda create --name efd-ia python=3.10
-
-# Ative o ambiente Conda
-conda activate efd-ia
-
-# Instale as dependências
-pip install -r requirements.txt
-```
-
-### Passos Explicados:
-
-1. **Criação do Ambiente Conda**: O comando `conda create --name efd-ia python=3.10` cria um novo ambiente Conda chamado `efd-ia` com Python 3.10.
-2. **Ativação do Ambiente**: Use `conda activate efd-ia` para ativar o ambiente Conda recém-criado.
-3. **Instalação das Dependências**: Com o ambiente ativado, instale as dependências listadas no `requirements.txt` usando o `pip`.
-
 
 ## 🧠 Tecnologias Utilizadas
 
