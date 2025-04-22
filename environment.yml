@@ -8,17 +8,17 @@ dependencies:
   - python=3.10 # Ou a versão que você prefere/precisa
   - pip
   # Dependências Conda principais
-  - pdfplumber
+  # - pdfplumber # Movido para a seção pip
   - pandas
   - pytorch
   - torchvision
   - torchaudio
   - pytorch-cuda=11.8 # Especifique a versão CUDA compatível com seu hardware/drivers
   - faiss-cpu # Ou faiss-gpu se tiver GPU compatível e quiser usar
-  - nltk
-  - python-dotenv
   # Dependências Pip (LangChain e Transformers são frequentemente atualizados, Pip pode ser mais fácil)
   - pip:
+    - pdfplumber 
+    - python-dotenv==1.0.0
     - langchain>=0.2.0,<0.3.0
     - langchain-community
     - langchain-core
