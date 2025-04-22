@@ -29,7 +29,7 @@ REM Verificação do script de setup removida
 REM --- Criação do Ambiente ---
 echo Criando o ambiente Conda '%ENV_NAME%' a partir de '%ENV_FILE%'...
 echo Isso pode levar varios minutos.
-conda env create -f "%ENV_FILE%" --force
+conda env create -f "%ENV_FILE%"
 if %errorlevel% neq 0 (
     echo Erro: Falha ao criar o ambiente Conda '%ENV_NAME%'.
     goto :eof
