@@ -17,45 +17,70 @@ Este projeto visa criar uma bateria de testes para avaliar a aplicação de mode
 
 ### Configuração do Ambiente
 
-1. Clone o repositório:
-```bash
-git clone https://github.com/seu-usuario/projeto_efd_ia.git
-cd projeto_efd_ia
-```
+Para configurar o ambiente necessário para executar os notebooks e scripts deste projeto, siga os passos abaixo. É recomendado o uso do gerenciador de ambientes Conda (Anaconda ou Miniconda).
 
-2. Crie um ambiente virtual e ative:
-```bash
-conda create --name efd-ia python=3.10
-conda activate efd-ia
-```
+**Pré-requisitos:**
 
-3. Instale as dependências:
-```bash
-pip install -r requirements.txt
-```
+*   [Anaconda](https://www.anaconda.com/products/distribution) ou [Miniconda](https://docs.conda.io/en/latest/miniconda.html) instalado e configurado no PATH do sistema.
+*   (Opcional, para execução com GPU) Placa de vídeo NVIDIA com drivers compatíveis com CUDA 11.8 (ou a versão especificada em `environment.yml`).
 
-### Configuração das Variáveis de Ambiente
+**Passos para Configuração (Método Manual Recomendado):**
 
-1. Copie o arquivo de exemplo `.env.example` para criar seu próprio arquivo `.env`:
-```bash
-cp .env.example .env
-```
+1.  **Clone o Repositório:**
+    ```bash
+    git clone https://github.com/seu-usuario/projeto_efd_ia.git
+    cd projeto_efd_ia
+    ```
 
-2. Edite o arquivo `.env` com suas configurações:
-```ini
-# Diretórios do projeto
-DIRECTORY_PDFS=documents/pdfs/tests        # Diretório onde estão os PDFs
-OUTPUT_DIR_STRUCTURED=documents/structured  # Diretório para saída dos dados estruturados
+2.  **Crie o Arquivo `.env`:**
+    *   Na raiz do projeto, crie um arquivo chamado `.env`.
+    *   Adicione as seguintes variáveis de ambiente a este arquivo, substituindo os valores conforme necessário:
+        ```dotenv
+        # Caminho para o diretório contendo os arquivos PDF de entrada
+        DIRECTORY_PDFS=documents/pdfs/tests        # Diretório onde estão os PDFs
+        OUTPUT_DIR_STRUCTURED=documents/structured  # Diretório para saída dos dados estruturados
 
-# Adicione outras variáveis conforme necessário
-```
+        # Adicione outras variáveis conforme necessário
+        ```
+    *   **Importante:** O script `config/env.py` valida a existência das variáveis marcadas como obrigatórias (atualmente `DIRECTORY_PDFS` e `OUTPUT_DIR_STRUCTURED`).
 
-3. Certifique-se de que os diretórios especificados existam:
-```bash
-mkdir -p documents/pdfs/tests documents/structured
-```
+3.  **Crie o Ambiente Conda:**
+    *   Abra um terminal (Prompt de Comando, Anaconda Prompt, etc.) na raiz do projeto.
+    *   Execute o comando para criar o ambiente `efd-ia` a partir do arquivo `environment.yml`:
+        ```bash
+        conda env create -f environment.yml
+        ```
+    *   Este comando instalará Python, PyTorch, LangChain, Transformers e todas as outras dependências listadas no arquivo. Pode levar vários minutos.
 
-> **Nota**: O arquivo `.env` não é versionado no Git por conter informações sensíveis. Sempre mantenha suas credenciais e configurações locais neste arquivo.
+4.  **Ative o Ambiente:**
+    *   Após a criação bem-sucedida, ative o ambiente Conda:
+        ```bash
+        conda activate efd-ia
+        ```
+    *   Você deverá ver `(efd-ia)` no início do prompt do seu terminal, indicando que o ambiente está ativo.
+
+5.  **Execute o Script de Configuração de Ambiente:**
+    *   **Dentro do ambiente ativado (`efd-ia`)**, execute o seguinte script Python para validar as variáveis de ambiente:
+        ```bash
+        python config/env.py
+        ```
+        *(Este script carrega as variáveis do `.env` e verifica se as obrigatórias estão presentes)*
+
+6.  **Pronto!** Seu ambiente está configurado e pronto para uso. Agora você pode executar os notebooks Jupyter ou outros scripts Python do projeto dentro deste ambiente ativado.
+
+**Alternativa: Configuração Automatizada (Script Windows)**
+
+Se preferir automatizar os passos 3, 4 e 5 em um único comando (no Windows), você pode usar o script `create_env.bat`:
+
+1.  Siga os passos 1 e 2 acima (Clonar repositório e Criar `.env`).
+2.  Execute o script batch na raiz do projeto:
+    ```bash
+    .\create_env.bat
+    ```
+3.  Após a conclusão, ative o ambiente manualmente se necessário:
+    ```bash
+    conda activate efd-ia
+    ```
 
 ---
 
