@@ -84,46 +84,39 @@ Se preferir automatizar os passos 3, 4 e 5 em um único comando (no Windows), vo
 
 ---
 
-## 🧱 Estrutura do Projeto
+## Estrutura do Projeto (Exemplo)
 
-projeto_efd_ia/ ├── main.py 
-
+```
 projeto_efd_ia/
-├── main.py # Executa a pipeline completa
-
-├── requirements.txt # Dependências do projeto
-
-├── README.md # Documentação do projeto
-
+├── main.py                             # Executa a pipeline completa
 │
-
-├── notebooks/ # Análises e experimentos com Jupyter
-
-│ ├── 01_texto_bruto.ipynb # Extração e exploração inicial
-
-│ ├── 02_texto_estruturado.ipynb # Validação e estruturação
-
-│ └── 03_teste_com_ia.ipynb # Avaliações com modelos IA
-
+├── requirements.txt                    # Dependências do projeto
 │
+├── README.md                           # Documentação do projeto
+│
+├── notebooks/                          # Análises e experimentos com Jupyter
+│   ├── 01_texto_bruto/                 # Testes diretos com texto dos documentos
+│   ├── 02_json_estruturado/            # Testes com registros estruturados
+│   ├── 03_grafos/                      # Abordagens baseadas em grafos, (se necessário)
+│   └── 04_avaliacoes/                  # Comparações e métricas agregadas
+│
+├── efd_rules/                          # Módulo de extração de regras
+├── efd_struct/                         # Módulo de estruturação de dados 
+├── efd_db/                             # Integração com banco de dados (não escopo)
+├── efd_ai/                             # Visualizações e interface (não escopo)
+├── efd_eval/                           # Métricas e geração de relatórios
+├── efd_utils/                          # Utilitários e funções auxiliares
+│
+├── data/                               # Dados brutos, estruturados e relatórios
+│
+├── config/                             # Arquivos de configuração do projeto
+│
+├── notes/                              # Anotações relevantes
+│
+└── tests/                              # Testes automatizados (não escopo)
+```
 
-├── efd_rules/ # Módulo de extração de regras
-
-├── efd_struct/ # Módulo de estruturação de dados
-
-├── efd_db/ # Integração com banco de dados
-
-├── efd_ai/ # Avaliação e automação com IA
-
-├── efd_eval/ # Métricas e geração de relatórios
-
-├── efd_utils/ # Utilitários e funções auxiliares
-
-├── data/ # Dados brutos, estruturados e relatórios
-
-├── config/ # Arquivos de configuração
-
-└── tests/ # Testes automatizados
+## Próximos Passos
 
 ---
 
