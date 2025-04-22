@@ -37,8 +37,8 @@ Para configurar o ambiente necessário para executar os notebooks e scripts dest
     *   Adicione as seguintes variáveis de ambiente a este arquivo, substituindo os valores conforme necessário:
         ```dotenv
         # Caminho para o diretório contendo os arquivos PDF de entrada
-        DIRECTORY_PDFS=documents/pdfs/tests        # Diretório onde estão os PDFs
-        OUTPUT_DIR_STRUCTURED=documents/structured  # Diretório para saída dos dados estruturados
+        DIRECTORY_PDFS=data/pdfs/tests        # Diretório onde estão os PDFs
+        OUTPUT_DIR_STRUCTURED=data/structured  # Diretório para saída dos dados estruturados
 
         # Adicione outras variáveis conforme necessário
         ```

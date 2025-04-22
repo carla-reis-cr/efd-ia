@@ -24,8 +24,8 @@ wheels/
 *.egg
 
 # Diretórios de dados
-documents/pdfs/**
-documents/structured/**
+data/pdfs/**
+data/structured/**
 output/**
 
 # IDEs
