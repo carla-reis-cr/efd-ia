@@ -2,3 +2,15 @@ pandas==2.2.1
 pdfplumber==0.10.3
 python-dateutil==2.8.2
 python-dotenv==1.0.0
+ipykernel>=6.29.3
+transformers
+sentencepiece
+torch==2.1.0+cu118 --find-links https://download.pytorch.org/whl/cu118/torch_stable.html
+torchvision==0.16.0+cu118 --find-links https://download.pytorch.org/whl/cu118/torch_stable.html
+torchaudio==2.1.0+cu118 --find-links https://download.pytorch.org/whl/cu118/torch_stable.html
+langchain
+langchain-community
+langchain-core
+langchain-experimental
+langchain-huggingface
+faiss-cpu
