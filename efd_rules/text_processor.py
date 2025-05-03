@@ -236,6 +236,143 @@ def extract_relationships(text, registro_atual):
     
     return relationships
 
+def extract_fields_from_text(text, registro_code):
+    """
+    Extrai campos diretamente do texto quando a tabela não é encontrada
+    """
+    fields = []
+    
+    # Padrões diferentes para encontrar a tabela de campos
+    table_patterns = [
+        r"Nº\s*\|\s*Campo\s*\|\s*Descrição\s*\|\s*Tipo\s*\|\s*Tamanho\s*\|\s*Dec\s*\|\s*Obrig",
+        r"Nº\s*Campo\s*Descrição\s*Tipo\s*Tam\s*Dec\s*Obrig",
+        r"Nº\s*Campo\s*Descrição\s*Tipo\s*Tamanho\s*Dec\s*Obrig",
+        r"Nº\s+Campo\s+Descrição\s+Tipo\s+Tam\s+Dec\s+Obrig",
+        r"Nº\s+Campo\s+Descrição\s+Tipo\s+Tamanho\s+Dec\s+Obrig",
+        r"N[ºo°]\s*Campo\s*Descri[çc][aã]o\s*Tipo\s*(?:Tam|Tamanho)\s*Dec\s*Obrig"
+    ]
+    
+    # Tenta cada padrão
+    table_section = None
+    for pattern in table_patterns:
+        if re.search(pattern, text, re.IGNORECASE):
+            parts = re.split(pattern, text, flags=re.IGNORECASE)
+            if len(parts) > 1:
+                table_section = parts[1]
+                break
+    
+    if table_section:
+        # Padrões para extrair linhas da tabela
+        field_patterns = [
+            # Formato com pipes: número | campo | descrição | tipo | tamanho | dec | obrig
+            r'(\d+)\s*\|\s*([^\|]+)\s*\|\s*([^\|]+)\s*\|\s*([^\|]+)\s*\|\s*([^\|]+)\s*\|\s*([^\|]*)\s*\|\s*([^\|]+)',
+            # Formato sem pipes: número campo descrição tipo tamanho dec obrig
+            r'(\d+)\s+(\S+)\s+((?:[^\d]+\s+){1,10}?)\s+(\S+)\s+(\d+)\s+(\S*)\s+(\S+)',
+            # Formato com espaços grandes
+            r'(\d+)\s+([^\s]+)\s+((?:[^\d]+\s+){1,10}?)\s+([CN])\s+(\d+)\s+(\d*)\s+([OC])',
+            # Formato com linhas quebradas
+            r'^\s*(\d+)\s+([^\s]+)\s+([^\n]+?)(?:\s{2,})([CN])\s+(\d+)\s+(\d*)\s+([OC])'
+        ]
+        
+        for pattern in field_patterns:
+            matches = list(re.finditer(pattern, table_section, re.MULTILINE))
+            if matches:
+                for match in matches:
+                    numero, campo, descricao, tipo, tamanho, dec, obrig = match.groups()
+                    fields.append({
+                        "numero": numero.strip(),
+                        "campo": campo.strip(),
+                        "descricao": descricao.strip(),
+                        "tipo": tipo.strip(),
+                        "tamanho": tamanho.strip(),
+                        "dec": dec.strip() if dec.strip() else None,
+                        "obrig": obrig.strip()
+                    })
+                
+                if fields:
+                    print(f"Extraídos {len(fields)} campos do registro {registro_code} usando padrão alternativo de tabela")
+                    return fields
+    
+    # Se ainda não encontrou campos, procura por padrão do tipo "Campo XX (NOME_CAMPO)"
+    campo_pattern = r'Campo\s+(\d+)\s*\(([^\)]+)\)\s*[-–]\s*([^.]*(?:\.[^C][^.]*)*)'
+    matches = re.finditer(campo_pattern, text, re.IGNORECASE)
+    
+    campo_info = {}
+    for match in matches:
+        campo_num = match.group(1)
+        campo_nome = match.group(2)
+        descricao = match.group(3).strip()
+        
+        # Procura pelo tipo, tamanho e outros atributos na descrição
+        tipo_match = re.search(r'(C|N)\s*\((\d+)[^\)]*\)', descricao)
+        tipo = tamanho = dec = obrig = ""
+        
+        if tipo_match:
+            tipo = tipo_match.group(1)  # C ou N
+            tamanho = tipo_match.group(2)  # Tamanho
+        
+        # Verifica obrigatoriedade
+        obrig = "O" if re.search(r'obrigatóri[oa]', descricao, re.IGNORECASE) else "OC"
+        
+        campo_info[campo_num] = {
+            "numero": campo_num,
+            "campo": campo_nome,
+            "descricao": descricao,
+            "tipo": tipo,
+            "tamanho": tamanho,
+            "dec": dec if dec else None,
+            "obrig": obrig
+        }
+    
+    # Adiciona os campos encontrados na ordem dos números
+    for num in sorted(campo_info.keys(), key=int):
+        fields.append(campo_info[num])
+    
+    # Se ainda não encontrou campos, procura por informações no formato "REG|XXXXXX|Texto descritivo"
+    if not fields:
+        reg_pattern = r'(REG)\s*[|;]\s*([^\s|;]+)\s*[|;]\s*([^|;]+)'
+        matches = re.finditer(reg_pattern, text, re.IGNORECASE)
+        
+        for i, match in enumerate(matches, 1):
+            campo, valor, descricao = match.groups()
+            fields.append({
+                "numero": str(i).zfill(2),
+                "campo": campo.strip(),
+                "descricao": descricao.strip(),
+                "tipo": "C",
+                "tamanho": "8",
+                "dec": None,
+                "obrig": "O"
+            })
+    
+    # Último recurso: procura por linhas que parecem ser campos (formato aproximado)
+    if not fields:
+        campo_aproximado = r'^\s*(\d+)\s+(\w+)\s+(.+?)\s+(C|N)\s+(\d+)'
+        matches = re.finditer(campo_aproximado, text, re.MULTILINE)
+        
+        for match in matches:
+            if len(match.groups()) >= 5:
+                numero, campo, descricao, tipo, tamanho = match.groups()[:5]
+                dec = None
+                obrig = "O"  # Valor padrão
+                
+                fields.append({
+                    "numero": numero.strip(),
+                    "campo": campo.strip(),
+                    "descricao": descricao.strip(),
+                    "tipo": tipo.strip(),
+                    "tamanho": tamanho.strip(),
+                    "dec": dec,
+                    "obrig": obrig
+                })
+    
+    if fields:
+        print(f"Extraídos {len(fields)} campos do registro {registro_code} usando padrão de descrição")
+    else:
+        print(f"Não foi possível extrair campos para o registro {registro_code}")
+    
+    return fields
+
 def process_table_to_json(table, section_text="", registro_atual=None):
     """
     Converte uma tabela em formato JSON organizando e tratando quebras de linha nas colunas
@@ -398,6 +535,29 @@ def process_table_to_json(table, section_text="", registro_atual=None):
                 
         except Exception as e:
             print(f"Erro ao processar tabela: {str(e)}")
+    
+    # Se não foi possível processar a tabela pelo método convencional,
+    # tenta extrair os campos diretamente do texto da seção
+    if section_text and registro_atual:
+        print(f"Tentando extrair campos do texto para o registro {registro_atual}...")
+        extracted_fields = extract_fields_from_text(section_text, registro_atual)
+        
+        if extracted_fields:
+            # Extrai informações adicionais do texto da seção
+            additional_info = extract_additional_info(section_text)
+            
+            # Procura relacionamentos gerais na seção
+            section_relationships = extract_relationships(section_text, registro_atual)
+            
+            # Cria o objeto final com as informações extraídas do texto
+            final_data = {
+                'nivel_hierarquico': additional_info.get('nivel_hierarquico'),
+                'ocorrencia': additional_info.get('ocorrencia'),
+                'relacionamentos': section_relationships,
+                'campos': extracted_fields
+            }
+            
+            return final_data
     
     return None
 
@@ -632,6 +792,8 @@ def main():
                 
                 # Procura a tabela correspondente ao registro
                 print(f"Procurando tabela para o registro {registro_numero}...")
+                tabela_encontrada = False
+                
                 for i, table in enumerate(tables):
                     if i not in tabelas_processadas and table:
                         print(f"Processando tabela {i}...")
@@ -644,8 +806,38 @@ def main():
                                 registro_data["relacionamentos"] = json_data.get('relacionamentos', [])
                                 registro_data["campos"] = json_data.get('campos', [])
                                 tabelas_processadas.add(i)
+                                tabela_encontrada = True
                                 print(f"Tabela encontrada para o registro {registro_numero}")
-                            break
+                                break
+                
+                # Se não encontrou tabela pelo método convencional, tenta extrair campos do texto
+                if not tabela_encontrada or not registro_data["campos"]:
+                    print(f"Tentando extrair campos diretamente do texto para o registro {registro_numero}...")
+                    
+                    # Busca o texto do registro que já temos e tenta extrair os campos
+                    json_data = process_table_to_json(None, registro["conteudo"], registro_numero)
+                    if json_data and json_data.get('campos'):
+                        registro_data["nivel_hierarquico"] = json_data.get('nivel_hierarquico')
+                        registro_data["ocorrencia"] = json_data.get('ocorrencia')
+                        registro_data["relacionamentos"] = json_data.get('relacionamentos', [])
+                        registro_data["campos"] = json_data.get('campos', [])
+                        print(f"Campos extraídos do texto para o registro {registro_numero}")
+                    else:
+                        print(f"Tentando buscar o texto nas páginas completas para o registro {registro_numero}...")
+                        # Para qualquer registro, busca em todas as páginas por texto contendo o número do registro
+                        registro_text = ""
+                        for texto_pagina in text_content:
+                            if registro_numero in texto_pagina:
+                                registro_text += texto_pagina + "\n"
+                        
+                        if registro_text:
+                            json_data = process_table_to_json(None, registro_text, registro_numero)
+                            if json_data and json_data.get('campos'):
+                                registro_data["nivel_hierarquico"] = json_data.get('nivel_hierarquico')
+                                registro_data["ocorrencia"] = json_data.get('ocorrencia')
+                                registro_data["relacionamentos"] = json_data.get('relacionamentos', [])
+                                registro_data["campos"] = json_data.get('campos', [])
+                                print(f"Campos extraídos do texto completo para o registro {registro_numero}")
                 
                 all_registros["registros"].append(registro_data)
                 registros_processados.add(registro_numero)
