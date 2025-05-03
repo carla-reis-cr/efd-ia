@@ -14,3 +14,12 @@ langchain-core
 langchain-experimental
 langchain-huggingface
 faiss-cpu
+pinecone
+tensorflow>=2.15.0
+tf-keras>=2.15.0
+notebook>=7.0.0
+ipywidgets>=8.1.0
+jupyterlab_widgets>=3.0.0
+widgetsnbextension>=4.0.0
+faiss-cpu
+faiss-gpu

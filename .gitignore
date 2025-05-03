@@ -37,3 +37,10 @@ output/**
 # Sistema
 .DS_Store
 Thumbs.db
+
+#Modelos
+models/
+model_cache/
+
+# Testes POC
+teste-POC/
