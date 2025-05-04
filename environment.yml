@@ -14,7 +14,7 @@ dependencies:
   - torchvision
   - torchaudio
   - pytorch-cuda=11.8 # Especifique a versão CUDA compatível com seu hardware/drivers
-  - faiss-cpu # Ou faiss-gpu se tiver GPU compatível e quiser usar 
+  # - faiss-cpu # Comentado pois usaremos a versão GPU
   - faiss-gpu
   - tensorflow # Adicionado para suporte ao tf-keras
   - notebook # Para suporte ao Jupyter Notebook
@@ -22,6 +22,7 @@ dependencies:
   # Dependências Pip (LangChain e Transformers são frequentemente atualizados, Pip pode ser mais fácil)
   - pip:
     - pdfplumber 
+    - pypdf
     - python-dotenv==1.0.0
     - langchain
     - langchain-community
