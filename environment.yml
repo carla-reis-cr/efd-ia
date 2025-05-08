@@ -34,4 +34,6 @@ dependencies:
     - tf-keras # Adicionado para compatibilidade com transformers
     - jupyterlab_widgets # Para widgets no JupyterLab
     - widgetsnbextension # Para widgets no Jupyter Notebook
+    - docling
+    - bitsandbytes accelerate
     # Adicione quaisquer outras dependências pip aqui 

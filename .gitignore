@@ -24,9 +24,11 @@ wheels/
 *.egg
 
 # Diretórios de dados
+data/ia_output/**
 data/pdfs/**
 data/structured/**
 output/**
+data/txt/**
 
 # IDEs
 .vscode/
