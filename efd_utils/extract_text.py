@@ -7,7 +7,8 @@ import os
 from dotenv import load_dotenv
 load_dotenv()
 
-output_dir = Path("data/structured/json")
+output_dir = Path(os.path.join(os.path.abspath(os.path.join(os.getcwd(), "..", "..")),"data"))
+
 tables = []
 
 def sanitize_filename(filename):
@@ -141,7 +142,7 @@ def extrair_texto(pdf_path):
     incrementar_markdown(markdown_limpo)
 
 def incrementar_markdown(markdown_limpo):
-    markdown_path = Path("data/txt/validacoes_extraidas.md")
+    markdown_path = Path(os.path.join(output_dir,"txt","validacoes_extraidas.md"))
     markdown_path.parent.mkdir(parents=True, exist_ok=True)  # Garante que a pasta existe
 
     # Junta todas as linhas em uma única string com quebra de linha
@@ -153,8 +154,9 @@ def incrementar_markdown(markdown_limpo):
 
 def extrair_tabelas(pdf_path):
     """Extrai apenas as tabelas do PDF e salva em JSON, categorizando por registro."""
-    # Criar diretório de saída
-    output_dir.mkdir(parents=True, exist_ok=True)
+    # Criar diretório de saída  
+    output_json = Path(os.path.join(output_dir,"structured","json"))
+    output_json.mkdir(parents=True, exist_ok=True)
     
     # Converter PDF para markdown
     doc_converter = DocumentConverter()
@@ -194,7 +196,7 @@ def extrair_tabelas(pdf_path):
         if codigo:
             codigo = codigo.group(1)
             nome_arquivo = f"registro_{codigo}.json"
-            json_path = output_dir / nome_arquivo
+            json_path = os.path.join(output_dir,"structured","json", nome_arquivo)
             
             with open(json_path, "w", encoding="utf-8") as f:
                 json.dump(json.loads(df.to_json(orient="records")), f, indent=2, ensure_ascii=False)
