@@ -17,8 +17,13 @@ from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline, BitsAndB
 from langchain_community.chat_models import ChatOllama
 from langchain.schema import HumanMessage
 
+from langchain.llms import CTransformers
+from langchain.chains import LLMChain
+from langchain.prompts import PromptTemplate
+
 from dotenv import load_dotenv
 load_dotenv()
+project_root = os.path.abspath(os.path.join(os.getcwd(), "..", ".."))
 
 def limpar_arquivos_temporarios():
     """Limpa arquivos temporários e modelos baixados."""
@@ -30,7 +35,8 @@ def limpar_arquivos_temporarios():
             shutil.rmtree(cache_dir)
         
         # Limpa o vectorstore
-        vectorstore_dir = Path("data/vectorstore")
+        vectorstore_dir = Path(os.path.join(project_root, "efd_db"))
+        print(vectorstore_dir)
         if vectorstore_dir.exists():
             print("Limpando vectorstore...")
             # Tenta remover várias vezes em caso de arquivo em uso
@@ -41,23 +47,43 @@ def limpar_arquivos_temporarios():
                 except PermissionError:
                     print("Aguardando arquivos serem liberados...")
                     time.sleep(1)
-        
+
+        # Limpa txt
+        txt_file = Path(os.path.join(project_root, "data", "txt" , "validacoes_extraidas.md"))
+        print(txt_file)
+        if txt_file.exists():
+            print("Limpando arquivo txt...")
+            txt_file.unlink()
+
         # Limpa os chunks
-        chunks_file = Path("data/structured/chunks.json")
+        chunks_file = Path(os.path.join(project_root, "data", "structured" , "chunks.json"))
+        print(chunks_file)
         if chunks_file.exists():
             print("Limpando arquivo de chunks...")
             chunks_file.unlink()
         
+        # Limpa os arquivos JSON na pasta json_dir
+        json_dir = Path(os.path.join(project_root, "data" , "structured" , "json"))
+        print(json_dir)
+        if json_dir.exists() and json_dir.is_dir():
+            print("Limpando arquivos JSON na pasta json...")
+            for json_file in json_dir.glob("*.json"):
+                try:
+                    json_file.unlink()
+                except Exception as e:
+                    print(f"⚠️ Não foi possível apagar o arquivo {json_file}: {str(e)}")
+
         print("✅ Limpeza concluída!")
     except Exception as e:
         print(f"⚠️ Aviso: Não foi possível limpar alguns arquivos: {str(e)}")
 
 class EFDChunker:
-    def __init__(self, markdown_path: str):
+    def __init__(self, markdown_path: str, model_name: str = "default-model"):
         self.markdown_path = Path(markdown_path)
-        self.json_dir = Path("data/structured/json")
+        self.json_dir = Path(os.path.abspath(os.path.join(project_root, "data", "structured", "json")))
         self.chunks: List[Dict] = []
-        
+        self.model_name = model_name  # Armazena o nome do modelo como parâmetro
+
     def extract_registers(self) -> List[Dict]:
         """Extrai os registros do arquivo markdown e os organiza em chunks."""
         content = self.markdown_path.read_text(encoding='utf-8')
@@ -101,12 +127,13 @@ class EFDChunker:
             chunk = {
                 'register_code': register_code,
                 'content': register_content,
-                'campos': campos,
+                'campos_exigidos': campos,
                 'metadata': {
                     'source': str(self.markdown_path),
                     'register': register_code,
                     'has_json': len(campos) > 0,
-                    'num_campos': len(campos)
+                    'num_campos': len(campos),
+                    'model_name': self.model_name  # Adiciona o modelo como metadado
                 }
             }
             self.chunks.append(chunk)
@@ -122,13 +149,14 @@ class EFDChunker:
         print(f"✅ Chunks salvos em: {output_file}")
 
 class EFDVectorStore:
-    #"sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
-    #"sentence-transformers/all-MiniLM-L6-v2"
-    def __init__(self, chunks_path: str):
+    def __init__(self, chunks_path: str, embedding_model: str = "sentence-transformers/all-MiniLM-L6-v2"):
         self.chunks_path = Path(chunks_path)
+        
+        # Configura o modelo de embeddings com base no parâmetro
         self.embeddings = HuggingFaceEmbeddings(
-            model_name="sentence-transformers/all-MiniLM-L6-v2"
+            model_name=embedding_model
         )
+
         self.vectorstore = None
         
     def create_vectorstore(self):
@@ -142,9 +170,9 @@ class EFDVectorStore:
         for chunk in chunks:
             # Cria um texto que combina o conteúdo e os campos
             content = chunk['content']
-            if chunk['campos']:
+            if chunk['campos_exigidos']:
                 campos_text = "\n\nCampos do registro:\n"
-                for campo in chunk['campos']:
+                for campo in chunk['campos_exigidos']:
                     campos_text += f"- {campo['codigo']}: {campo['descricao']}\n"
                 content += campos_text
             
@@ -159,7 +187,7 @@ class EFDVectorStore:
         self.vectorstore = Chroma.from_documents(
             documents=documents,
             embedding=self.embeddings,
-            persist_directory="efd_db/vectorstore"
+            persist_directory=os.path.join(project_root, "efd_db", "vectorstore")
         )
         print("✅ Vectorstore criado com sucesso!")
         
@@ -176,14 +204,14 @@ class EFDVectorStore:
             self.vectorstore = None
 
 class EFDChatTransformers:
-    def __init__(self):
+    def __init__(self, model_name: str ):
 
         token= os.getenv('HUGGINGFACEHUB_API_TOKEN')
 
         login(token, new_session=False)
 
         # Carrega o modelo e tokenizer
-        model_name = "mistralai/Mistral-Nemo-Instruct-2407"
+        #model_name = "mistralai/Mistral-Nemo-Instruct-2407"
         #"neuralmind/bert-base-portuguese-cased"
         #"mistralai/Mistral-7B-Instruct-v0.2"
 
@@ -319,16 +347,62 @@ class EFDChatOllama:
         prompt = self.format_prompt(query, context)
         response = self.llm([HumanMessage(content=prompt)])
         return response.content
+
+class EFDChatBode:
+    """
+    Classe para interação com o modelo recogna-nlp/bode-7b-alpaca-pt-br-gguf via ctransformers.
+    """
+    def __init__(self, model_file=r"e:\Carla Reis\Projects\Notebooks\efd-ia\models\bode\bode-7b-alpaca-q8_0.gguf"):
+        self.model_file = model_file
+
+        self.template = """Abaixo está uma instrução que descreve uma tarefa. Escreva uma resposta que complete adequadamente o pedido.
+
+### Instrução:
+{instruction}
+
+### Resposta:"""
+        self.prompt = PromptTemplate(template=self.template, input_variables=["instruction"])
+
+        self.llm = CTransformers(
+            model="recogna-nlp/bode-7b-alpaca-pt-br-gguf",
+            model_file=self.model_file,
+            model_type='llama'
+        )
+        self.llm_chain = LLMChain(prompt=self.prompt, llm=self.llm)
+
+    def format_context(self, context):
+        # Junta o contexto dos documentos do vector store
+        context_text = "\n\n".join([
+            f"Registro: {doc.metadata.get('register', '')}\nConteúdo: {doc.page_content}"
+            for doc in context
+        ])
+        return context_text
+
+    def get_response(self, query, context_text ):
+        # Monta a instrução com o contexto do vector store
+        
+        instruction = f"""Você é um assistente especializado em EFD (Escrituração Fiscal Digital).
+Responda com base apenas nas informações abaixo. Se não souber a resposta, diga que não tem informações suficientes.
+
+Contexto:
+{context_text}
+
+Pergunta: {query}"""
+        response = self.llm_chain.run(instruction)
+        return response.strip()
     
 def main():
     try:
+        # Limpa arquivos temporários ao finalizar
+        limpar_arquivos_temporarios()
+        
         # Cria os chunks
-        chunker = EFDChunker("data/txt/validacoes_extraidas.md")
+        chunker = EFDChunker(os.path.join(project_root,"data","txt","validacoes_extraidas.md"))
         chunks = chunker.extract_registers()
-        chunker.save_chunks("data/structured/chunks.json")
+        chunker.save_chunks(os.path.join(project_root,"data","structured","chunks.json"))
         
         # Cria o vectorstore
-        vectorstore = EFDVectorStore("data/structured/chunks.json")
+        vectorstore = EFDVectorStore(os.path.join(project_root,"data","structured","chunks.json"))
         vectorstore.create_vectorstore()
         retriever = vectorstore.vectorstore.as_retriever()
         
@@ -360,8 +434,7 @@ def main():
         if 'vectorstore' in locals():
             vectorstore.close()
         
-        # Limpa arquivos temporários ao finalizar
-        #limpar_arquivos_temporarios()
+        
 
 if __name__ == "__main__":
-    main() 
+    main()
